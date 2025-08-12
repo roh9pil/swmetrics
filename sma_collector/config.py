@@ -1,34 +1,26 @@
+from pydantic_settings import BaseSettings
 import os
-from pydantic import BaseSettings
 from dotenv import load_dotenv
 
 load_dotenv()
 
 class Settings(BaseSettings):
-    DB_SOURCE: str
-    
-    # Phase 1
-    GIT_REPO_URL: str
-    JIRA_HOST: str
-    JIRA_USER: str
-    JIRA_TOKEN: str
-    JIRA_PROJECT_KEY: str
-    JENKINS_HOST: str
-    JENKINS_USER: str
-    JENKINS_TOKEN: str
-    JENKINS_JOB_NAME: str
-    DEPLOYMENT_JOB_NAME_PATTERN: str
-    
-    # Phase 2
-    VTS_RESULTS_PATH: str = "/app/data/vts_results"
-    PROFILING_DATA_PATH: str = "/app/data/profiling"
-    
-    # Phase 3
-    GITHUB_TOKEN: str | None = None
-    SURVEY_DATA_PATH: str = "/app/data/surveys/survey.csv"
-    SONARQUBE_HOST: str | None = None
-    SONARQUBE_TOKEN: str | None = None
-    SONARQUBE_PROJECT_KEY: str | None = None
+    """
+    애플리케이션 설정을 관리하는 클래스입니다.
+    """
+    JIRA_SERVER: str = os.getenv("JIRA_SERVER", "https://your-jira-instance.atlassian.net")
+    JIRA_USERNAME: str = os.getenv("JIRA_USERNAME", "user@example.com")
+    JIRA_API_TOKEN: str = os.getenv("JIRA_API_TOKEN", "your_api_token")
+    JIRA_PROJECT_KEY: str = os.getenv("JIRA_PROJECT_KEY", "PROJ")
+
+    GIT_REPO_PATH: str = os.getenv("GIT_REPO_PATH", "./local_repo")
+
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///sma_data.db")
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = 'utf-8'
 
 settings = Settings()
+
 
