@@ -1,59 +1,57 @@
-# sma_collector/connectors/jira_connector.py
 import logging
-from jira import JIRA
-from datetime import datetime
+from typing import List, Dict, Any
+from jira import JIRA, JIRAError
+from sma_collector.config import settings
+from .collector import BaseCollector
 
-class JiraConnector:
-    def __init__(self, host: str, user: str, token: str):
-        self.client = JIRA(server=host, basic_auth=(user, token))
+logger = logging.getLogger(__name__)
 
-    def collect_issues(self, project_key: str, max_results=100) -> list[dict]:
-        jql = f"project = {project_key} ORDER BY created DESC"
-        issues_raw = self.client.search_issues(jql, maxResults=max_results)
+class JiraCollector(BaseCollector):
+    """
+    Jira 서버에서 이슈 데이터를 수집하는 클래스.
+    """
+    def __init__(self):
+        try:
+            self.jira = JIRA(
+                server=settings.JIRA_SERVER,
+                basic_auth=(settings.JIRA_USERNAME, settings.JIRA_API_TOKEN)
+            )
+            logger.info(f"Jira 서버 '{settings.JIRA_SERVER}'에 연결되었습니다.")
+        except JIRAError as e:
+            logger.error(f"Jira 연결 실패: {e.text}")
+            raise
+
+    def collect(self) -> List[Dict[str, Any]]:
+        all_issues_data = []
+        jql = f'project = {settings.JIRA_PROJECT_KEY} ORDER BY created DESC'
+        block_size = 100
+        block_num = 0
         
-        issues =
-        for issue in issues_raw:
-            resolved_date_str = issue.fields.resolutiondate
-            resolved_date = datetime.fromisoformat(resolved_date_str.replace('Z', '+00:00')) if resolved_date_str else None
-            created_date_str = issue.fields.created
-            created_date = datetime.fromisoformat(created_date_str.replace('Z', '+00:00')) if created_date_str else None
-            
-            lead_time = None
-            if resolved_date and created_date:
-                lead_time = (resolved_date - created_date).total_seconds() / 60
-
-            sli = None
-            for label in issue.fields.labels:
-                if label.lower().startswith("sli-"):
-                    try:
-                        sli = int(label.split('-')[1])
-                        break
-                    except (ValueError, IndexError):
-                        pass
-
-            issues.append({
-                "id": issue.id,
-                "issue_key": issue.key,
-                "type": self._normalize_issue_type(issue.fields.issuetype.name),
-                "status": self._normalize_issue_status(issue.fields.status.name),
-                "title": issue.fields.summary,
-                "created_date": created_date,
-                "resolved_date": resolved_date,
-                "lead_time_minutes": int(lead_time) if lead_time is not None else None,
-                "sli": sli,
-            })
-        logging.info(f"Collected {len(issues)} issues from Jira.")
-        return issues
-
-    def _normalize_issue_type(self, jira_type: str) -> str:
-        lower_type = jira_type.lower()
-        if "bug" in lower_type: return "BUG"
-        if "incident" in lower_type: return "INCIDENT"
-        return "REQUIREMENT"
-
-    def _normalize_issue_status(self, jira_status: str) -> str:
-        lower_status = jira_status.lower()
-        if lower_status in ["done", "closed", "resolved", "complete"]: return "DONE"
-        if lower_status in ["in progress", "in review", "in qa"]: return "IN_PROGRESS"
-        return "TODO"
+        while True:
+            try:
+                start_at = block_num * block_size
+                issues = self.jira.search_issues(jql, startAt=start_at, maxResults=block_size)
+                if not issues:
+                    break
+                
+                for issue in issues:
+                    fields = issue.fields
+                    issue_data = {
+                        "key": issue.key,
+                        "summary": fields.summary,
+                        "description": fields.description or "",
+                        "status": fields.status.name,
+                        "issue_type": fields.issuetype.name,
+                        "reporter": fields.reporter.displayName if fields.reporter else "N/A",
+                        "assignee": fields.assignee.displayName if fields.assignee else "N/A",
+                        "created": fields.created,
+                        "updated": fields.updated,
+                        "resolved": fields.resolutiondate,
+                    }
+                    all_issues_data.append(issue_data)
+                block_num += 1
+            except JIRAError as e:
+                logger.error(f"Jira 이슈 검색 중 오류 발생: {e.text}")
+                break
+        return all_issues_data
 
