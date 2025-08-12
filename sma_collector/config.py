@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     
     # Phase 3
     GITHUB_TOKEN: str | None = None
+    SWARM_HOST: str | None = None
+    SWARM_USER: str | None = None
+    SWARM_TOKEN: str | None = None
     SURVEY_DATA_PATH: str = "/app/data/surveys/survey.csv"
     SONARQUBE_HOST: str | None = None
     SONARQUBE_TOKEN: str | None = None

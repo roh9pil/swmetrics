@@ -11,6 +11,7 @@ from..connectors.jenkins_connector import JenkinsConnector
 from..connectors.android_connector import AndroidConnector
 from..connectors.survey_connector import SurveyConnector
 from..connectors.sonarqube_connector import SonarQubeConnector
+from..connectors.swarm_connector import SwarmConnector
 from..config import settings
 
 def run_pipeline():
@@ -22,6 +23,11 @@ def run_pipeline():
         git = GitConnector(settings.GIT_REPO_URL, "/app/repo", settings.GITHUB_TOKEN)
         commits_data = git.collect_commits()
         reviews_data = git.collect_pull_requests()
+
+        if settings.SWARM_HOST:
+            swarm = SwarmConnector(settings.SWARM_HOST, settings.SWARM_USER, settings.SWARM_TOKEN)
+            swarm_reviews_data = swarm.collect_reviews()
+            reviews_data.extend(swarm_reviews_data)
 
         jira = JiraConnector(settings.JIRA_HOST, settings.JIRA_USER, settings.JIRA_TOKEN)
         issues_data = jira.collect_issues(settings.JIRA_PROJECT_KEY)
