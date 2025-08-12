@@ -17,13 +17,16 @@ setup(
         "pydantic-settings",
         "GitPython",
         "PyGithub",
+        "atlassian-python-api",
         "jira",
+        "requests",
         "SQLAlchemy",
         "fastapi",
         "uvicorn[standard]",
         "pandas",
         "plotly",
         "dash",
+        "pytest",
     ],
     entry_points={
         'console_scripts': [
