@@ -1,2 +1,0 @@
-[console_scripts]
-sma-collect = sma_collector.main:main

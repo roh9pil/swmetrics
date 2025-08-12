@@ -1,7 +1,0 @@
-setup.py
-sma_collector.egg-info/PKG-INFO
-sma_collector.egg-info/SOURCES.txt
-sma_collector.egg-info/dependency_links.txt
-sma_collector.egg-info/entry_points.txt
-sma_collector.egg-info/requires.txt
-sma_collector.egg-info/top_level.txt
