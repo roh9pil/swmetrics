@@ -49,18 +49,18 @@ def run_pipeline():
         bulk_upsert(session, TeamSurvey, survey_data)
         bulk_upsert(session, CodeQualityMetric, quality_metrics_data)
 
-        all_build_commits =
+        all_build_commits = []
         for build_id, commit_shas in build_commits_map.items():
             for sha in commit_shas:
                 all_build_commits.append({"build_id": build_id, "commit_sha": sha})
         bulk_upsert(session, BuildCommit, all_build_commits)
 
         # --- 3. TRANSFORM & LOAD (derived data) ---
-        deployments =
+        deployments = []
         for build in builds_data:
             if settings.DEPLOYMENT_JOB_NAME_PATTERN in build['job_name'] and build['status'] == 'SUCCESS':
-                commits_in_build = build_commits_map.get(build['id'],)
-                rep_commit = commits_in_build if commits_in_build else None
+                commits_in_build = build_commits_map.get(build['id'], [])
+                rep_commit = commits_in_build[0] if commits_in_build else None
                 deployments.append({
                     "id": build['id'],
                     "commit_sha": rep_commit,
@@ -70,9 +70,9 @@ def run_pipeline():
         bulk_upsert(session, Deployment, deployments)
         logging.info(f"Transformed and loaded {len(deployments)} deployments.")
 
-        incidents =
+        incidents = []
         for issue in issues_data:
-            if issue['type'] in:
+            if issue['type'] in ['Bug']:
                 related_deployment_id = None
                 latest_deployment_time = None
                 for dep in deployments:

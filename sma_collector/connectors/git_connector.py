@@ -25,7 +25,7 @@ class GitConnector:
         return repo
 
     def collect_commits(self, max_count=1000) -> list[dict]:
-        commits =
+        commits = []
         for commit in self._repo.iter_commits('HEAD', max_count=max_count):
             commits.append({
                 "sha": commit.hexsha,
@@ -38,7 +38,7 @@ class GitConnector:
         return commits
 
     def collect_pull_requests(self, max_count=100) -> list[dict]:
-        reviews =
+        reviews = []
         if not self.github_client:
             logging.warning("GitHub token not provided. Skipping PR collection.")
             return reviews
@@ -51,7 +51,7 @@ class GitConnector:
                 comments = pr.get_issue_comments()
                 if comments.totalCount > 0:
                     # get_issue_comments() is a PaginatedList, need to get the first element
-                    first_comment_date = comments.created_at
+                    first_comment_date = comments[0].created_at
 
                 time_to_first_review = None
                 if first_comment_date:

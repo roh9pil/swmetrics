@@ -10,7 +10,7 @@ class SonarQubeConnector:
             self.client = SonarQubeClient(sonarqube_url=host, token=token)
 
     def collect_quality_metrics(self, project_key: str | None) -> list[dict]:
-        metrics =
+        metrics = []
         if not (self.client and project_key):
             logging.warning("SonarQube host/token/project_key not provided. Skipping quality metrics collection.")
             return metrics

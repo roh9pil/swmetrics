@@ -1,0 +1,9 @@
+psycopg2-binary
+SQLAlchemy
+GitPython
+PyGithub
+jira
+python-jenkins
+sonarqube-client
+pydantic
+python-dotenv

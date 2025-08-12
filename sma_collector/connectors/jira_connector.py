@@ -11,7 +11,7 @@ class JiraConnector:
         jql = f"project = {project_key} ORDER BY created DESC"
         issues_raw = self.client.search_issues(jql, maxResults=max_results)
         
-        issues =
+        issues = []
         for issue in issues_raw:
             resolved_date_str = issue.fields.resolutiondate
             resolved_date = datetime.fromisoformat(resolved_date_str.replace('Z', '+00:00')) if resolved_date_str else None

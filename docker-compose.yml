@@ -12,7 +12,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      -./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data_py:/var/lib/postgresql/data
 
   grafana:
@@ -24,39 +24,39 @@ services:
     depends_on:
       - postgres
     environment:
-      - GF_DATABASE_TYPE=postgres
-      - GF_DATABASE_HOST=postgres
-      - GF_DATABASE_NAME=sma_db
-      - GF_DATABASE_USER=sma_user
-      - GF_DATABASE_PASSWORD=sma_password
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: postgres
+      GF_DATABASE_NAME: sma_db
+      GF_DATABASE_USER: sma_user
+      GF_DATABASE_PASSWORD: sma_password
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
 
   sma-collector:
-    build:.
+    build: .
     container_name: sma_collector_py
     restart: on-failure
     depends_on:
       - postgres
     environment:
-      - DB_SOURCE=postgresql+psycopg2://sma_user:sma_password@postgres:5432/sma_db
-      - GIT_REPO_URL=${GIT_REPO_URL}
-      - JIRA_HOST=${JIRA_HOST}
-      - JIRA_USER=${JIRA_USER}
-      - JIRA_TOKEN=${JIRA_TOKEN}
-      - JIRA_PROJECT_KEY=${JIRA_PROJECT_KEY}
-      - JENKINS_HOST=${JENKINS_HOST}
-      - JENKINS_USER=${JENKINS_USER}
-      - JENKINS_TOKEN=${JENKINS_TOKEN}
-      - JENKINS_JOB_NAME=${JENKINS_JOB_NAME}
-      - DEPLOYMENT_JOB_NAME_PATTERN=${DEPLOYMENT_JOB_NAME_PATTERN}
-      - VTS_RESULTS_PATH=${VTS_RESULTS_PATH}
-      - PROFILING_DATA_PATH=${PROFILING_DATA_PATH}
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - SURVEY_DATA_PATH=${SURVEY_DATA_PATH}
-      - SONARQUBE_HOST=${SONARQUBE_HOST}
-      - SONARQUBE_TOKEN=${SONARQUBE_TOKEN}
-      - SONARQUBE_PROJECT_KEY=${SONARQUBE_PROJECT_KEY}
+      DB_SOURCE: postgresql+psycopg2://sma_user:sma_password@postgres:5432/sma_db
+      GIT_REPO_URL: ${GIT_REPO_URL}
+      JIRA_HOST: ${JIRA_HOST}
+      JIRA_USER: ${JIRA_USER}
+      JIRA_TOKEN: ${JIRA_TOKEN}
+      JIRA_PROJECT_KEY: ${JIRA_PROJECT_KEY}
+      JENKINS_HOST: ${JENKINS_HOST}
+      JENKINS_USER: ${JENKINS_USER}
+      JENKINS_TOKEN: ${JENKINS_TOKEN}
+      JENKINS_JOB_NAME: ${JENKINS_JOB_NAME}
+      DEPLOYMENT_JOB_NAME_PATTERN: ${DEPLOYMENT_JOB_NAME_PATTERN}
+      VTS_RESULTS_PATH: ${VTS_RESULTS_PATH}
+      PROFILING_DATA_PATH: ${PROFILING_DATA_PATH}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      SURVEY_DATA_PATH: ${SURVEY_DATA_PATH}
+      SONARQUBE_HOST: ${SONARQUBE_HOST}
+      SONARQUBE_TOKEN: ${SONARQUBE_TOKEN}
+      SONARQUBE_PROJECT_KEY: ${SONARQUBE_PROJECT_KEY}
     volumes:
       - ${VTS_RESULTS_PATH}:${VTS_RESULTS_PATH}
       - ${PROFILING_DATA_PATH}:${PROFILING_DATA_PATH}
@@ -64,4 +64,3 @@ services:
 
 volumes:
   postgres_data_py:
-

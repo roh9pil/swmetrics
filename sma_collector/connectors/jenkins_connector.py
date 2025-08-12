@@ -8,11 +8,11 @@ class JenkinsConnector:
         self.server = jenkins.Jenkins(host, username=user, password=token)
 
     def collect_builds(self, job_name: str, max_builds=100) -> tuple[list[dict], dict]:
-        builds =
+        builds = []
         build_commits_map = {}
         try:
             job_info = self.server.get_job_info(job_name, depth=1)
-            build_numbers = [b['number'] for b in job_info.get('builds',)[:max_builds]]
+            build_numbers = [b['number'] for b in job_info.get('builds', [])[:max_builds]]
 
             for number in build_numbers:
                 try:
@@ -30,7 +30,7 @@ class JenkinsConnector:
                         "duration_millis": build_info['duration'],
                     })
                     
-                    commits = [change['commitId'] for change in build_info.get('changeSet', {}).get('items',) if 'commitId' in change]
+                    commits = [change['commitId'] for change in build_info.get('changeSet', {}).get('items', []) if 'commitId' in change]
                     build_commits_map[build_info['url']] = commits
                 except jenkins.JenkinsException as e:
                     logging.warning(f"Could not get build {number}: {e}")
