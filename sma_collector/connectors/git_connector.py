@@ -1,18 +1,5 @@
-# sma_collector/connectors/git_connector.py
-import logging
-from git import Repo, GitCommandError, NoSuchPathError
-from github import Github
 
-class GitConnector:
-    def __init__(self, repo_url: str, repo_path: str, github_token: str | None = None):
-        self.repo_url = repo_url
-        self.repo_path = repo_path
-        self._repo = self._clone_or_open_repo()
-        
-        self.github_client = None
-        if github_token:
-            self.github_client = Github(github_token)
-            self.github_repo_name = '/'.join(repo_url.split('/')[-2:]).replace('.git', '')
+,<큰으러러려ㅕㄱ bi hi Jenni '/'.join(repo_url.split('/')[-2:]).replace('.git', '')
 
     def _clone_or_open_repo(self):
         try:
