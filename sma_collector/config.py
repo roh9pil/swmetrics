@@ -15,6 +15,16 @@ class Settings(BaseSettings):
 
     GIT_REPO_PATH: str = os.getenv("GIT_REPO_PATH", "./local_repo")
 
+    # Bitbucket Settings
+    BITBUCKET_SERVER: str = os.getenv("BITBUCKET_SERVER", "https://your-bitbucket-instance.com")
+    BITBUCKET_USERNAME: str = os.getenv("BITBUCKET_USERNAME", "user@example.com")
+    BITBUCKET_API_TOKEN: str = os.getenv("BITBUCKET_API_TOKEN", "your_api_token")
+
+    # Swarm Settings
+    SWARM_SERVER: str = os.getenv("SWARM_SERVER", "https://your-swarm-instance.com")
+    SWARM_USERNAME: str = os.getenv("SWARM_USERNAME", "user@example.com")
+    SWARM_API_TOKEN: str = os.getenv("SWARM_API_TOKEN", "your_api_token")
+
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///sma_data.db")
 
     class Config:
