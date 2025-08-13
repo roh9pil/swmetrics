@@ -3,33 +3,90 @@ import os
 import pika
 import json
 import time
+import logging
 from sma_collector.connectors.git_connector import GitConnector
 from sma_collector.connectors.jira_connector import JiraCollector
 from sma_collector.config import settings
+from sma_collector.database.models import Commit, CodeReview, Issue, get_db_session, bulk_upsert
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def callback(ch, method, properties, body):
     job = json.loads(body)
-    print(f" [x] Received job: {job}")
+    logger.info(f" [x] Received job: {job}")
 
     source = job.get('source')
+    session = get_db_session()
 
-    if source == 'git':
-        print("Starting Git collection...")
-        connector = GitConnector(
-            repo_path=settings.GIT_REPO_PATH,
-            repo_url=settings.GIT_REPO_URL,
-            github_token=settings.GITHUB_TOKEN
-        )
-        connector.collect()
-        print("Git collection finished.")
-    elif source == 'jira':
-        print("Starting Jira collection...")
-        connector = JiraCollector()
-        connector.collect()
-        print("Jira collection finished.")
-    # Add other collectors here in the future
+    try:
+        if source == 'git':
+            logger.info("Starting Git collection...")
+            connector = GitConnector(
+                repo_path=settings.GIT_REPO_PATH,
+                repo_url=settings.GIT_REPO_URL,
+                github_token=settings.GITHUB_TOKEN
+            )
+            data = connector.collect()
 
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+            if data.get('commits'):
+                bulk_upsert(session, Commit, data['commits'])
+                logger.info(f"Upserted {len(data['commits'])} commits.")
+
+            if data.get('pull_requests'):
+                # The model is CodeReview, so we need to map the fields
+                pr_data = [
+                    {
+                        "id": pr["id"],
+                        "repo_name": pr["repo_name"],
+                        "pr_number": pr["pr_number"],
+                        "title": pr["title"],
+                        "author": pr["author"],
+                        "created_date": pr["created_date"],
+                        "merged_date": pr["merged_date"],
+                        # 'state' from collector is not in 'CodeReview' model
+                    } for pr in data['pull_requests']
+                ]
+                bulk_upsert(session, CodeReview, pr_data)
+                logger.info(f"Upserted {len(pr_data)} pull requests as code reviews.")
+
+            logger.info("Git collection finished.")
+
+        elif source == 'jira':
+            logger.info("Starting Jira collection...")
+            connector = JiraCollector()
+            issues = connector.collect()
+
+            # Map Jira issues to the Issue model
+            issue_data = [
+                {
+                    "id": issue["key"], # Using key as primary key
+                    "issue_key": issue["key"],
+                    "type": issue["issue_type"],
+                    "status": issue["status"],
+                    "title": issue["summary"],
+                    "created_date": issue["created"],
+                    "resolved_date": issue["resolved"],
+                } for issue in issues
+            ]
+
+            if issue_data:
+                bulk_upsert(session, Issue, issue_data)
+                logger.info(f"Upserted {len(issue_data)} issues.")
+
+            logger.info("Jira collection finished.")
+
+        else:
+            logger.warning(f"Unknown source: {source}")
+
+    except Exception as e:
+        logger.error(f"An error occurred processing job {job}: {e}")
+        # Optionally, you could nack the message to requeue it
+        # ch.basic_nack(delivery_tag=method.delivery_tag)
+    finally:
+        session.close()
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        logger.info(f"Finished processing job: {job}")
 
 
 def main():
