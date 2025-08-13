@@ -6,3 +6,10 @@ dash
 plotly
 pika
 python-dotenv
+pytest
+pytest-mock
+GitPython
+PyGithub
+atlassian-python-api
+pydantic-settings
+jira
