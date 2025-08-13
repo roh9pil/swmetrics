@@ -1,7 +1,7 @@
 import logging
 from typing import List, Dict, Any
 from jira import JIRA, JIRAError
-from sma_collector.config import settings
+from sma_collector.config import Settings
 from .collector import BaseCollector
 
 logger = logging.getLogger(__name__)
@@ -10,20 +10,21 @@ class JiraCollector(BaseCollector):
     """
     Jira 서버에서 이슈 데이터를 수집하는 클래스.
     """
-    def __init__(self):
+    def __init__(self, settings: Settings):
+        self.settings = settings
         try:
             self.jira = JIRA(
-                server=settings.JIRA_SERVER,
-                basic_auth=(settings.JIRA_USERNAME, settings.JIRA_API_TOKEN)
+                server=self.settings.JIRA_SERVER,
+                basic_auth=(self.settings.JIRA_USERNAME, self.settings.JIRA_API_TOKEN)
             )
-            logger.info(f"Jira 서버 '{settings.JIRA_SERVER}'에 연결되었습니다.")
+            logger.info(f"Jira 서버 '{self.settings.JIRA_SERVER}'에 연결되었습니다.")
         except JIRAError as e:
             logger.error(f"Jira 연결 실패: {e.text}")
             raise
 
     def collect(self) -> List[Dict[str, Any]]:
         all_issues_data = []
-        jql = f'project = {settings.JIRA_PROJECT_KEY} ORDER BY created DESC'
+        jql = f'project = {self.settings.JIRA_PROJECT_KEY} ORDER BY created DESC'
         block_size = 100
         block_num = 0
         
@@ -54,4 +55,3 @@ class JiraCollector(BaseCollector):
                 logger.error(f"Jira 이슈 검색 중 오류 발생: {e.text}")
                 break
         return all_issues_data
-
