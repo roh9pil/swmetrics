@@ -1,6 +1,16 @@
 version: '3.8'
 
 services:
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: sma_rabbitmq
+    ports:
+      - "5672:5672" # AMQP protocol
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+
   postgres:
     image: postgres:15
     container_name: sma_postgres_py
@@ -38,8 +48,43 @@ services:
     restart: on-failure
     depends_on:
       - postgres
+      - rabbitmq
     environment:
       - DB_SOURCE=postgresql+psycopg2://sma_user:sma_password@postgres:5432/sma_db
+      - RABBITMQ_HOST=rabbitmq
+      - GIT_REPO_URL=${GIT_REPO_URL}
+      - JIRA_HOST=${JIRA_HOST}
+      - JIRA_USER=${JIRA_USER}
+      - JIRA_TOKEN=${JIRA_TOKEN}
+      - JIRA_PROJECT_KEY=${JIRA_PROJECT_KEY}
+      - JENKINS_HOST=${JENKINS_HOST}
+      - JENKINS_USER=${JENKINS_USER}
+      - JENKINS_TOKEN=${JENKINS_TOKEN}
+      - JENKINS_JOB_NAME=${JENKINS_JOB_NAME}
+      - DEPLOYMENT_JOB_NAME_PATTERN=${DEPLOYMENT_JOB_NAME_PATTERN}
+      - VTS_RESULTS_PATH=${VTS_RESULTS_PATH}
+      - PROFILING_DATA_PATH=${PROFILING_DATA_PATH}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - SURVEY_DATA_PATH=${SURVEY_DATA_PATH}
+      - SONARQUBE_HOST=${SONARQUBE_HOST}
+      - SONARQUBE_TOKEN=${SONARQUBE_TOKEN}
+      - SONARQUBE_PROJECT_KEY=${SONARQUBE_PROJECT_KEY}
+    volumes:
+      - ${VTS_RESULTS_PATH}:${VTS_RESULTS_PATH}
+      - ${PROFILING_DATA_PATH}:${PROFILING_DATA_PATH}
+      - ${SURVEY_DATA_PATH}:${SURVEY_DATA_PATH}
+
+  collector-worker:
+    build:.
+    container_name: sma_collector_worker
+    restart: on-failure
+    command: python -m sma_collector.collector_worker
+    depends_on:
+      - postgres
+      - rabbitmq
+    environment:
+      - DB_SOURCE=postgresql+psycopg2://sma_user:sma_password@postgres:5432/sma_db
+      - RABBITMQ_HOST=rabbitmq
       - GIT_REPO_URL=${GIT_REPO_URL}
       - JIRA_HOST=${JIRA_HOST}
       - JIRA_USER=${JIRA_USER}

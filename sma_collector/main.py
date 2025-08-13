@@ -1,37 +1,51 @@
+import os
+import pika
+import json
 import logging
-from sma_collector.etl.pipeline import run_pipeline
-from sma_collector.config import settings
 
-# 로깅 설정
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def main():
     """
-    데이터 수집 CLI의 메인 진입점입니다.
-    설정을 로드하고 ETL 파이프라인을 실행합니다.
+    Dispatches data collection jobs to the RabbitMQ queue.
     """
     logger.info("=================================================")
-    logger.info("  Software Metrics Analyzer (SMA) Collector 시작")
+    logger.info("  Software Metrics Analyzer (SMA) Job Dispatcher")
     logger.info("=================================================")
-    
-    logger.info(f"Jira 서버: {settings.JIRA_SERVER}")
-    logger.info(f"분석할 Git 레포지토리: {settings.GIT_REPO_PATH}")
-    logger.info(f"데이터베이스 경로: {settings.DATABASE_URL}")
-    
+
+    rabbitmq_host = os.getenv('RABBITMQ_HOST', 'rabbitmq')
     try:
-        run_pipeline()
-        logger.info("ETL 파이프라인이 성공적으로 완료되었습니다.")
-    except Exception as e:
-        logger.error(f"파이프라인 실행 중 오류 발생: {e}", exc_info=True)
-    finally:
-        logger.info("SMA Collector 실행 종료.")
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host))
+        channel = connection.channel()
+        channel.queue_declare(queue='collection_jobs')
+        logger.info("Successfully connected to RabbitMQ.")
+    except pika.exceptions.AMQPConnectionError as e:
+        logger.error(f"Failed to connect to RabbitMQ: {e}")
+        return
+
+    # Define the jobs to be dispatched
+    jobs = [
+        {'source': 'git'},
+        {'source': 'jira'}
+        # Add other sources like 'bitbucket', 'swarm' here as you migrate them
+    ]
+
+    for job in jobs:
+        message = json.dumps(job)
+        channel.basic_publish(
+            exchange='',
+            routing_key='collection_jobs',
+            body=message,
+            properties=pika.BasicProperties(
+                delivery_mode=2,  # make message persistent
+            ))
+        logger.info(f" [x] Sent job: {message}")
+
+    connection.close()
+    logger.info("All collection jobs have been dispatched.")
+    logger.info("=================================================")
+
 
 if __name__ == "__main__":
     main()
-
-
