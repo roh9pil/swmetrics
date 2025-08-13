@@ -1,70 +1,87 @@
-Software Metrics Analyzer (SMA) Collector
-개요 (Overview)
-이 프로젝트는 Git, Jira와 같은 다양한 개발 소스에서 데이터를 수집, 분석하고 시각화하여 임베디드 소프트웨어 개발팀의 생산성과 효율성을 측정하는 지표를 제공하기 위해 만들어졌습니다.
-수집된 데이터는 로컬 데이터베이스에 저장되며, REST API를 통해 접근하거나 웹 기반 대시보드에서 시각적으로 확인할 수 있습니다.
-주요 기능 (Key Features)
- * 데이터 수집: 로컬 Git 레포지토리에서 커밋 기록을, Jira 서버에서 이슈 데이터를 수집합니다.
- * ETL 파이프라인: 수집(Extract), 변환(Transform), 적재(Load) 과정을 자동화하여 데이터를 정제하고 데이터베이스에 저장합니다.
- * REST API: FastAPI를 사용하여 수집된 데이터에 접근할 수 있는 API를 제공합니다.
- * 시각화 대시보드: Dash와 Plotly를 사용하여 주요 지표(주별 커밋 수, 작업자별 기여도 등)를 시각화합니다.
-실행 방법 (How to Run)
-프로젝트를 실행하기 위한 단계별 가이드입니다.
-1단계: 프로젝트 환경 설정 (Step 1: Project Environment Setup)
- * 가상 환경 생성 및 활성화
-   프로젝트의 루트 디렉토리에서 터미널을 열고 아래 명령어를 실행하여 파이썬 가상 환경을 만들고 활성화합니다.
-   # 가상 환경 생성
-python -m venv venv
+# Software Metrics Analyzer (SMA) Collector
 
-# Windows에서 활성화
-.\venv\Scripts\activate
+## Overview
 
-# macOS/Linux에서 활성화
-source venv/bin/activate
+The Software Metrics Analyzer (SMA) Collector is a tool designed to measure the productivity and efficiency of software development teams. It collects data from various development sources like Git repositories and Jira projects, processes it, and stores it in a database for analysis and visualization.
 
- * 필수 패키지 설치
-   requirements.txt 파일을 사용하여 필요한 모든 라이브러리를 설치합니다.
-   pip install -r requirements.txt
+This project uses a containerized architecture with Docker and Docker Compose, making it easy to set up and run.
 
- * 환경 변수 설정 (.env 파일)
-   .env.example 파일을 복사하여 .env 파일을 생성합니다. 그 다음, 파일 내용을 자신의 환경에 맞게 수정합니다.
-   # .env.example 파일을 .env로 복사
-# Linux/macOS: cp .env.example .env
-# Windows: copy .env.example .env
+## Architecture
 
-   .env 파일 수정 예시:
-   # Jira 설정
-JIRA_SERVER="https://your-jira.atlassian.net"
-JIRA_USERNAME="your-email@example.com"
-JIRA_API_TOKEN="your_jira_api_token_here"
-JIRA_PROJECT_KEY="YOUR_PROJECT_KEY"
+The application consists of several services orchestrated by `docker-compose`:
 
-# 분석할 로컬 Git 레포지토리 경로
-GIT_REPO_PATH="C:/path/to/your/local/repo"
+-   **`postgres`**: A PostgreSQL database used to store all the collected metrics data.
+-   **`rabbitmq`**: A message broker that queues data collection jobs.
+-   **`grafana`**: A visualization platform used to create and display dashboards based on the collected data.
+-   **`collector-worker`**: A background worker that listens for jobs from RabbitMQ, collects data from sources (like Jira, Git), and stores it in the PostgreSQL database.
+-   **`sma-collector`**: A command-line tool that dispatches collection jobs to RabbitMQ. This is run manually to trigger the data collection process.
 
-# 데이터베이스 연결 URL (기본값 사용 권장)
-DATABASE_URL="sqlite:///sma_data.db"
+## Prerequisites
 
-2단계: 데이터 수집 실행 (Step 2: Run Data Collection)
- * 프로젝트 설치
-   아래 명령어를 실행하여 sma-collect 명령어를 터미널에서 사용할 수 있도록 프로젝트를 개발 모드로 설치합니다.
-   pip install -e .
+Before you begin, ensure you have the following installed on your system:
 
- * 데이터 수집기 실행
-   터미널에서 다음 명령어를 실행하면 .env 파일의 설정을 바탕으로 Git과 Jira에서 데이터를 수집하여 sma_data.db 파일에 저장합니다.
-   sma-collect
+-   [Docker](https://docs.docker.com/get-docker/)
+-   [Docker Compose](https://docs.docker.com/compose/install/)
 
-3단계: API 서버 및 대시보드 실행 (Step 3: Run API Server and Dashboard)
-데이터 수집이 완료된 후, API 서버와 대시보드를 각각 다른 터미널에서 실행해야 합니다.
-API 서버 실행
- * 새 터미널을 열고 가상 환경을 활성화합니다. (.\venv\Scripts\activate 또는 source venv/bin/activate)
- * 아래 명령어로 FastAPI 서버를 시작합니다.
-   uvicorn sma_collector.api.main:app --reload
+## How to Run
 
- * 웹 브라우저에서 http://127.0.0.1:8000/docs 로 접속하여 API 문서를 확인하고 테스트할 수 있습니다.
-대시보드 실행
- * 또 다른 새 터미널을 열고 가상 환경을 활성화합니다.
- * 아래 명령어로 Dash 대시보드 서버를 시작합니다.
-   python sma_collector/dashboard/app.py
+1.  **Clone the Repository**
 
- * 웹 브라우저에서 http://127.0.0.1:8050 로 접속하여 시각화된 지표를 확인합니다.
+    ```bash
+    git clone https://github.com/your-repo/sma-collector.git
+    cd sma-collector
+    ```
 
+2.  **Create Configuration File**
+
+    Copy the example environment file `.env.example` to a new file named `.env`.
+
+    ```bash
+    cp .env.example .env
+    ```
+
+3.  **Configure Your Environment**
+
+    Open the `.env` file and fill in the required values for your environment. You must provide credentials for the data sources you want to analyze (e.g., Jira, GitHub).
+
+    **Key variables to configure:**
+    -   `GIT_REPO_URL`: The URL of the remote Git repository you want to analyze.
+    -   `JIRA_SERVER`, `JIRA_USERNAME`, `JIRA_API_TOKEN`, `JIRA_PROJECT_KEY`: Your Jira instance details.
+    -   Other credentials for Jenkins, SonarQube, etc., if you use them.
+
+4.  **Build and Start the Services**
+
+    Run the following command to build the Docker images and start all the background services (`postgres`, `rabbitmq`, `grafana`, and `collector-worker`) in detached mode.
+
+    ```bash
+    docker-compose up --build -d
+    ```
+    The `collector-worker` service will start and wait for collection jobs to be dispatched.
+
+5.  **Run the Data Collection**
+
+    To start the data collection process, run the `sma-collector` service. This will send jobs to the `collector-worker`.
+
+    ```bash
+    docker-compose run --rm sma-collector
+    ```
+
+    You can run this command anytime you want to trigger a new data collection run.
+
+## Accessing the Services
+
+-   **Grafana Dashboard**:
+    -   URL: `http://localhost:3001`
+    -   Default Username: `admin`
+    -   Default Password: `admin`
+    You will need to configure a PostgreSQL data source in Grafana and build your own dashboards to visualize the data.
+
+-   **RabbitMQ Management UI**:
+    -   URL: `http://localhost:15672`
+    -   Default Username: `user`
+    -   Default Password: `password`
+    Here you can monitor the message queues and see the flow of collection jobs.
+
+-   **PostgreSQL Database**:
+    -   The database is exposed on port `5433` on your host machine. You can connect to it using a database client if you need to inspect the data directly.
+    -   Credentials are in your `.env` file (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`).

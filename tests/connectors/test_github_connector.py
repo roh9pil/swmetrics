@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-# from sma_collector.connectors.github_connector import GitHubConnector
+from sma_collector.connectors.github_connector import GitHubConnector
 from sma_collector.config import Settings
 
 @pytest.fixture

@@ -3,9 +3,13 @@ from typing import Optional
 
 class Settings(BaseSettings):
     """
-    애플리케이션 설정을 관리하는 클래스입니다.
-    .env 파일에서 환경 변수를 자동으로 로드합니다.
+    Manages application settings.
+    Loads environment variables automatically from a .env file.
     """
+    # Core Infrastructure
+    DATABASE_URL: str = "sqlite:///sma_data.db"
+    RABBITMQ_HOST: str = "localhost"
+
     # Jira Settings
     JIRA_SERVER: str = "https://your-jira-instance.atlassian.net"
     JIRA_USERNAME: str = "user@example.com"
@@ -13,25 +17,36 @@ class Settings(BaseSettings):
     JIRA_PROJECT_KEY: str = "PROJ"
 
     # Git and GitHub Settings
-    GIT_REPO_PATH: str = "./local_repo"
+    GIT_REPO_PATH: Optional[str] = None
     GIT_REPO_URL: Optional[str] = None
     GITHUB_TOKEN: Optional[str] = None
 
     # Bitbucket Settings
-    BITBUCKET_SERVER: str = "https://your-bitbucket-instance.com"
-    BITBUCKET_USERNAME: str = "user@example.com"
-    BITBUCKET_API_TOKEN: str = "your_api_token"
+    BITBUCKET_SERVER: Optional[str] = None
+    BITBUCKET_USERNAME: Optional[str] = None
+    BITBUCKET_API_TOKEN: Optional[str] = None
 
     # Swarm Settings
-    SWARM_SERVER: str = "https://your-swarm-instance.com"
-    SWARM_USERNAME: str = "user@example.com"
-    SWARM_API_TOKEN: str = "your_api_token"
+    SWARM_SERVER: Optional[str] = None
+    SWARM_USERNAME: Optional[str] = None
+    SWARM_API_TOKEN: Optional[str] = None
 
-    # Database URL
-    DATABASE_URL: str = "sqlite:///sma_data.db"
+    # Jenkins Settings
+    JENKINS_HOST: Optional[str] = None
+    JENKINS_USER: Optional[str] = None
+    JENKINS_TOKEN: Optional[str] = None
+    JENKINS_JOB_NAME: Optional[str] = None
+    DEPLOYMENT_JOB_NAME_PATTERN: Optional[str] = None
 
-    # RabbitMQ Host
-    RABBITMQ_HOST: str = "rabbitmq"
+    # SonarQube Settings
+    SONARQUBE_HOST: Optional[str] = None
+    SONARQUBE_TOKEN: Optional[str] = None
+    SONARQUBE_PROJECT_KEY: Optional[str] = None
+
+    # Local File Path Settings
+    VTS_RESULTS_PATH: Optional[str] = None
+    PROFILING_DATA_PATH: Optional[str] = None
+    SURVEY_DATA_PATH: Optional[str] = None
 
     class Config:
         env_file = ".env"
