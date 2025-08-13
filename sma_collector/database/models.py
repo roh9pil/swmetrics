@@ -112,7 +112,7 @@ class CodeQualityMetric(Base):
     metric_value = Column(Float)
 
 # --- Database Session Management ---
-engine = create_engine(settings.DB_SOURCE)
+engine = create_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db_session():

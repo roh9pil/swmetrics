@@ -50,19 +50,15 @@ class GitConnector(BaseCollector):
 
         return repo
 
-    def collect(self) -> list[dict]:
+    def collect(self) -> dict:
         """Git과 GitHub에서 데이터를 수집합니다."""
         if not self._repo:
-            return []
+            return {"commits": [], "pull_requests": []}
 
         commits = self.collect_commits()
         pull_requests = self.collect_pull_requests()
 
-        # In a real scenario, you might want to merge or relate this data.
-        # For now, we can return them as separate entries or focus on one.
-        # Let's assume for now the goal is to get commits.
-        # This can be expanded later.
-        return commits
+        return {"commits": commits, "pull_requests": pull_requests}
 
     def collect_commits(self, max_count: int = 1000) -> list[dict]:
         """지정된 브랜치에서 커밋 목록을 수집합니다."""
