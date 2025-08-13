@@ -23,10 +23,10 @@ def test_main_dispatches_jobs(mock_blocking_connection):
     # Assert that a connection was made
     mock_blocking_connection.assert_called_once()
     mock_connection.channel.assert_called_once()
-    mock_channel.queue_declare.assert_called_once_with(queue='collection_jobs')
+    mock_channel.queue_declare.assert_called_once_with(queue='collection_jobs', durable=True)
 
-    # Assert that both jobs were published
-    assert mock_channel.basic_publish.call_count == 2
+    # Assert that all jobs were published
+    assert mock_channel.basic_publish.call_count == 3
 
     # Check the calls to basic_publish
     expected_calls = [
@@ -34,6 +34,12 @@ def test_main_dispatches_jobs(mock_blocking_connection):
             exchange='',
             routing_key='collection_jobs',
             body=json.dumps({'source': 'git'}),
+            properties=pika.BasicProperties(delivery_mode=2)
+        ),
+        call(
+            exchange='',
+            routing_key='collection_jobs',
+            body=json.dumps({'source': 'github'}),
             properties=pika.BasicProperties(delivery_mode=2)
         ),
         call(
@@ -47,12 +53,15 @@ def test_main_dispatches_jobs(mock_blocking_connection):
 
 
 @patch('sma_collector.collector_worker.JiraCollector')
-@patch('sma_collector.collector_worker.GitConnector')
+@patch('sma_collector.collector_worker.LocalGitConnector')
 @patch('sma_collector.collector_worker.settings')
 def test_worker_callback(mock_settings, mock_git_connector, mock_jira_collector):
     """
     Test that the worker callback correctly processes jobs.
     """
+    # Setup the registry before running the test
+    collector_worker.setup_registry()
+
     # --- Test Git Job ---
     # Setup mock objects
     mock_channel = MagicMock()

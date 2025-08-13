@@ -45,17 +45,17 @@ services:
   sma-collector:
     build:.
     container_name: sma_collector_py
-    restart: on-failure
+    command: ["sma-collect"]
     depends_on:
       - postgres
       - rabbitmq
     environment:
-      - DB_SOURCE=postgresql+psycopg2://sma_user:sma_password@postgres:5432/sma_db
+      - DATABASE_URL=postgresql+psycopg2://sma_user:sma_password@postgres:5432/sma_db
       - RABBITMQ_HOST=rabbitmq
       - GIT_REPO_URL=${GIT_REPO_URL}
-      - JIRA_HOST=${JIRA_HOST}
-      - JIRA_USER=${JIRA_USER}
-      - JIRA_TOKEN=${JIRA_TOKEN}
+      - JIRA_SERVER=${JIRA_SERVER}
+      - JIRA_USERNAME=${JIRA_USERNAME}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
       - JIRA_PROJECT_KEY=${JIRA_PROJECT_KEY}
       - JENKINS_HOST=${JENKINS_HOST}
       - JENKINS_USER=${JENKINS_USER}
@@ -83,12 +83,12 @@ services:
       - postgres
       - rabbitmq
     environment:
-      - DB_SOURCE=postgresql+psycopg2://sma_user:sma_password@postgres:5432/sma_db
+      - DATABASE_URL=postgresql+psycopg2://sma_user:sma_password@postgres:5432/sma_db
       - RABBITMQ_HOST=rabbitmq
       - GIT_REPO_URL=${GIT_REPO_URL}
-      - JIRA_HOST=${JIRA_HOST}
-      - JIRA_USER=${JIRA_USER}
-      - JIRA_TOKEN=${JIRA_TOKEN}
+      - JIRA_SERVER=${JIRA_SERVER}
+      - JIRA_USERNAME=${JIRA_USERNAME}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
       - JIRA_PROJECT_KEY=${JIRA_PROJECT_KEY}
       - JENKINS_HOST=${JENKINS_HOST}
       - JENKINS_USER=${JENKINS_USER}
